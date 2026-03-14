@@ -1,11 +1,56 @@
 # 🎯 校招匹配助手 (Campus Match Bot)
 
-**版本:** 1.0.0  
-**作者:** Werner_Lau
+**版本:** 1.1.0  
+**作者:** 求职助手团队  
+**许可证:** MIT
 
 ---
 
-## 📖 项目简介
+## 🚀 快速开始 (安装方式)
+
+### 方式 1: 一键安装 (推荐)
+
+```bash
+# 克隆项目
+git clone https://github.com/liuhuayu502/campus-match-bot.git
+
+# 进入目录
+cd campus-match-bot
+
+# 运行安装脚本
+chmod +x install.sh
+./install.sh
+```
+
+### 方式 2: 手动安装
+
+```bash
+# 1. 克隆项目到 OpenClaw skills 目录
+git clone https://github.com/liuhuayu502/campus-match-bot.git ~/.openclaw/workspace/skills/campus-match
+
+# 2. 安装依赖
+cd ~/.openclaw/workspace/skills/campus-match
+pip install -r requirements.txt
+
+# 3. 重启 OpenClaw
+openclaw restart
+```
+
+### 方式 3: 仅 Python 使用
+
+```bash
+# 克隆项目
+git clone https://github.com/liuhuayu502/campus-match-bot.git
+cd campus-match-bot
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 运行
+python src/main.py --resume my-resume.md --companies bytedance,tencent
+```
+
+---
 
 **校招匹配助手** 是一个智能校招岗位匹配工具，可以帮助你：
 
