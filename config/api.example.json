@@ -1,0 +1,9 @@
+{
+  "default_model": "minimax/MiniMax-M2.5",
+  "fallback_model": "bailian/qwen3.5-plus",
+  "filter_rules": {
+    "min_match_score": 60,
+    "exclude_keywords": ["985/211", "硕士及以上", "3 年以上经验"],
+    "min_salary": 150
+  }
+}

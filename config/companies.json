@@ -1,0 +1,49 @@
+{
+  "companies": [
+    {
+      "id": "bytedance",
+      "name": "字节跳动",
+      "campusUrl": "https://jobs.bytedance.com/campus",
+      "socialUrl": "https://jobs.bytedance.com",
+      "cities": ["北京", "上海", "深圳", "广州", "杭州", "成都"],
+      "hotPositions": ["内容运营", "用户运营", "产品运营", "市场营销"],
+      "status": "active"
+    },
+    {
+      "id": "tencent",
+      "name": "腾讯",
+      "campusUrl": "https://join.qq.com",
+      "socialUrl": "https://careers.tencent.com",
+      "cities": ["深圳", "北京", "上海", "广州", "成都"],
+      "hotPositions": ["产品运营", "内容策划", "用户增长"],
+      "status": "active"
+    },
+    {
+      "id": "alibaba",
+      "name": "阿里巴巴",
+      "campusUrl": "https://talent.alibaba.com/campus",
+      "socialUrl": "https://talent.alibaba.com",
+      "cities": ["杭州", "北京", "上海", "深圳"],
+      "hotPositions": ["运营专员", "品类运营", "活动运营"],
+      "status": "active"
+    },
+    {
+      "id": "meituan",
+      "name": "美团",
+      "campusUrl": "https://campus.meituan.com",
+      "socialUrl": "https://recruit.meituan.com",
+      "cities": ["北京", "上海", "深圳", "成都"],
+      "hotPositions": ["商家运营", "用户运营", "市场拓展"],
+      "status": "active"
+    },
+    {
+      "id": "xiaohongshu",
+      "name": "小红书",
+      "campusUrl": "https://job.xiaohongshu.com/campus",
+      "socialUrl": "https://job.xiaohongshu.com",
+      "cities": ["上海", "北京"],
+      "hotPositions": ["内容运营", "社区运营", "品牌营销"],
+      "status": "active"
+    }
+  ]
+}
