@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """
-岗位爬取器 - 真实数据版
+岗位爬取器 - 真实数据版 v2.2
 Job Crawler - Real Data Version
 
-更新内容 (v2.0):
-- 支持从字节跳动官网爬取真实岗位数据
-- 支持日常实习筛选
-- 支持岗位类别筛选
-- 每个岗位附带申请链接
+更新内容 (v2.2):
+- 支持 Browser 抓取真实岗位数据
+- 添加岗位过滤逻辑（排除小语种要求）
+- 改进示例数据
 
 使用方式:
   from job_crawler import JobCrawler
   crawler = JobCrawler()
   jobs = crawler.crawl("bytedance", category="运营")
+  
+  # 使用真实Browser抓取
+  jobs = crawler.crawl_with_browser("bytedance", category="运营", city="上海")
 """
 
 import json
@@ -527,6 +529,86 @@ class JobCrawler:
             }
             for company_id, info in self.company_info.items()
         ]
+    
+    def filter_jobs_by_language(self, jobs: List[Dict], languages: List[str]) -> List[Dict]:
+        """
+        根据用户语言能力过滤岗位
+        
+        Args:
+            jobs: 岗位列表
+            languages: 用户具备的语言列表
+        
+        Returns:
+            过滤后的岗位列表（保留所有岗位，但标记风险）
+        """
+        # 常见小语种关键词
+        language_keywords = {
+            "日语": ["日语", "日本", "东京", "N1", "N2"],
+            "韩语": ["韩语", "韩国", "首尔", "TOPIK"],
+            "法语": ["法语", "法国", "巴黎", "DELF", "TCF"],
+            "德语": ["德语", "德国", "柏林", "TestDaF", "歌德"],
+            "西班牙语": ["西班牙语", "西班牙", "DELE"],
+            "葡萄牙语": ["葡萄牙语", "巴西", "葡萄牙"],
+            "印尼语": ["印尼", "印尼语", "雅加达", "菲律宾", "马来"],
+            "阿拉伯语": ["阿拉伯语", "中东", "沙特", "阿联酋"],
+        }
+        
+        filtered_jobs = []
+        
+        for job in jobs:
+            jd_text = (job.get('description', '') + ' ' + job.get('requirements', '')).lower()
+            
+            # 检查是否要求小语种
+            risk_level = "safe"
+            risk_reason = ""
+            
+            for lang, keywords in language_keywords.items():
+                # 检查用户是否具备该语言
+                user_has_lang = any(lang in l.lower() for l in languages)
+                
+                # 检查JD是否要求该语言
+                jd_requires_lang = any(kw in jd_text for kw in keywords)
+                
+                if jd_requires_lang and not user_has_lang:
+                    # 如果JD要求但用户没有，标记为高风险
+                    if risk_level != "exclude":
+                        risk_level = "high_risk"
+                        risk_reason = f"要求{lang}"
+            
+            job['risk_level'] = risk_level
+            job['risk_reason'] = risk_reason
+            filtered_jobs.append(job)
+        
+        return filtered_jobs
+    
+    def get_job_filter_url(self, company_id: str, category: str = None, city: str = None) -> str:
+        """
+        获取岗位筛选URL（用于Browser抓取）
+        
+        Args:
+            company_id: 公司ID
+            category: 职位类别
+            city: 工作城市
+        
+        Returns:
+            筛选URL
+        """
+        if company_id == "bytedance":
+            project_id = BYTEDANCE_INTERNSHIP_PROJECT  # 日常实习
+            url = f"{BYTEDANCE_BASE_URL}/campus/position?project={project_id}"
+            
+            if category:
+                cat_id = CATEGORY_MAP.get(category)
+                if cat_id:
+                    url += f"&category={cat_id}"
+            
+            if city:
+                # 城市筛选需要在页面上点击
+                pass
+            
+            return url
+        
+        return ""
 
 
 # 测试代码
