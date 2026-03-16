@@ -244,9 +244,9 @@ COMPANIES = {
     "baidu": {
         "name": "百度",
         "name_en": "Baidu",
-        "campus_url": "https://talent.baidu.com/campus",
+        "campus_url": "https://talent.baidu.com/jobs/campus",
         "social_url": "https://talent.baidu.com",
-        "job_list_url": "https://talent.baidu.com/campus/position",
+        "job_list_url": "https://talent.baidu.com/jobs/campus",
         
         # 招聘项目
         "campus_projects": {
