@@ -1,14 +1,166 @@
 #!/usr/bin/env python3
 """
-大厂校招官网配置数据 v2.1
-Company Career Website Configuration v2.1
+大厂校招官网配置数据 v2.2
+Company Career Website Configuration v2.2
 
-包含各大厂的校招/社招官网URL、岗位分类结构
-以及预设的岗位详情页面结构和API端点
+包含各大厂的校招/社招官网URL、招聘项目树结构、岗位分类
+重点：招聘项目需要根据用户毕业年份进行筛选
 
 数据来源: 实际访问各公司招聘官网抓取
 更新时间: 2026-03-17
 """
+
+# =============================================================================
+# 用户毕业年份与招聘项目匹配
+# =============================================================================
+
+# 2026年3月时的用户毕业年份对应关系
+GRADUATION_YEAR_MAP = {
+    # 2026年毕业 (2026届) - 可参加校招和日常实习
+    2026: {
+        "bytedance": ["2026届校园招聘", "筋斗云人才计划实习专项", "日常实习"],
+        "tencent": ["2026应届生招聘"],
+        "meituan": ["应届校招"],
+        "baidu": ["校园招聘"],
+        "xiaohongshu": ["校园招聘"],
+        "kuaishou": ["校园招聘"],
+        "bilibili": ["校园招聘"],
+        "xiaomi": ["校园招聘"],
+        "huawei": ["校园招聘"]
+    },
+    # 2027年毕业 (2027届) - 可参加日常实习和ByteIntern
+    2027: {
+        "bytedance": ["日常实习", "ByteIntern"],
+        "tencent": ["2026实习生招聘"],
+        "meituan": ["日常实习", "转正实习"],
+        "baidu": ["日常实习"],
+        "xiaohongshu": ["日常实习"],
+        "kuaishou": ["日常实习"],
+        "bilibili": ["日常实习"],
+        "xiaomi": ["日常实习"],
+        "huawei": ["日常实习"]
+    },
+    # 2028年及以后 - 只能参加日常实习
+    2028: {
+        "bytedance": ["日常实习", "ByteIntern"],
+        "tencent": ["2026实习生招聘"],
+        "meituan": ["日常实习"],
+        "baidu": ["日常实习"],
+        "xiaohongshu": ["日常实习"],
+        "kuaishou": ["日常实习"],
+        "bilibili": ["日常实习"],
+        "xiaomi": ["日常实习"],
+        "huawei": ["日常实习"]
+    }
+}
+
+
+# =============================================================================
+# 字节跳动招聘项目树 (实测)
+# =============================================================================
+# 正式 (校园招聘)
+# ├── 2026届校园招聘
+# ├── 2026届筋斗云人才计划
+# └── 2026届Top Seed人才计划
+# 实习
+# ├── Top Seed人才计划研究实习生专项 (面向硕士/博士)
+# ├── 筋斗云人才计划实习专项
+# ├── 日常实习 (面向全体在校生，3个月及以上)
+# └── ByteIntern (面向2027届毕业生)
+
+BYTEDANCE_PROJECTS = {
+    "正式": {
+        "2026届校园招聘": {
+            "id": "7194661553653016845",
+            "type": "campus",
+            "target": "2026届",
+            "description": "面向2026年毕业的同学"
+        },
+        "2026届筋斗云人才计划": {
+            "id": "7194661553652951317",
+            "type": "talent",
+            "target": "2026届",
+            "description": "技术顶尖人才计划"
+        },
+        "2026届Top Seed人才计划": {
+            "id": "7194661553652885781",
+            "type": "talent",
+            "target": "2026届",
+            "description": "AI/研究顶尖人才计划"
+        }
+    },
+    "实习": {
+        "Top Seed人才计划研究实习生专项": {
+            "id": "7194661644654512445",
+            "type": "research_intern",
+            "target": "2026届硕博",
+            "description": "面向硕士/博士，研究实习生专项"
+        },
+        "筋斗云人才计划实习专项": {
+            "id": "7194661644654446901",
+            "type": "intern",
+            "target": "2026届",
+            "description": "技术实习专项"
+        },
+        "日常实习": {
+            "id": "7194661644654577981",
+            "type": "intern",
+            "target": "全体在校生",
+            "description": "面向全体在校生，为符合岗位要求的同学提供为期3个月及以上的项目实践机会"
+        },
+        "ByteIntern": {
+            "id": "7194661644654381357",
+            "type": "intern",
+            "target": "2027届",
+            "description": "面向2027届毕业生，为字节跳动战略级实习项目"
+        }
+    }
+}
+
+
+# =============================================================================
+# 美团招聘项目树 (实测)
+# =============================================================================
+# 应届校招
+# ├── 应届校招
+# ├── 北斗计划 (技术顶尖人才)
+# └── 食杂零售管培生计划
+# 实习
+# ├── 转正实习
+# └── 日常实习
+
+MEITUAN_PROJECTS = {
+    "应届校招": {
+        "应届校招": {
+            "type": "campus",
+            "target": "2026届",
+            "description": "校园招聘，应届生岗位"
+        },
+        "北斗计划": {
+            "type": "talent",
+            "target": "2026届",
+            "description": "技术顶尖人才培养计划"
+        },
+        "食杂零售管培生计划": {
+            "type": "管培生",
+            "target": "2026届",
+            "description": "零售业务管培生"
+        }
+    },
+    "实习": {
+        "转正实习": {
+            "type": "intern_conversion",
+            "target": "2026届",
+            "description": "可转正的实习岗位"
+        },
+        "日常实习": {
+            "type": "intern",
+            "target": "全体在校生",
+            "description": "日常实习岗位"
+        }
+    }
+}
+
 
 # =============================================================================
 # 岗位详情页面结构配置
@@ -730,6 +882,64 @@ def build_filter_url(company_id: str, project: str = None, category: str = None,
     if page > 1:
         params.append(f"page={page}")
     return f"{base_url}?{'&'.join(params)}" if params else base_url
+
+
+def suggest_projects_for_user(company_id: str, graduation_year: int, current_year: int = 2026) -> list:
+    """
+    根据用户情况推荐适合的招聘项目
+    
+    Args:
+        company_id: 公司ID
+        graduation_year: 毕业年份
+        current_year: 当前年份
+    
+    Returns:
+        推荐项目列表（包含详细信息）
+    """
+    suggestions = []
+    
+    # 距离毕业年数
+    years_to_graduation = graduation_year - current_year
+    
+    if years_to_graduation <= 0:
+        # 已毕业，只能参加社招
+        return []
+    
+    if years_to_graduation == 0:
+        # 当年毕业，可参加校招
+        suggestions.append({
+            "project": "校招",
+            "priority": "high",
+            "reason": "当年毕业，应届生身份"
+        })
+    
+    if years_to_graduation >= 1:
+        # 1年以内毕业，可参加日常实习
+        suggestions.append({
+            "project": "日常实习",
+            "priority": "high",
+            "reason": "在校生，可参加日常实习"
+        })
+    
+    # 字节跳动特殊项目
+    if company_id == "bytedance":
+        if years_to_graduation == 1:
+            suggestions.append({
+                "project": "ByteIntern",
+                "priority": "medium",
+                "reason": "面向下一届毕业生"
+            })
+    
+    # 美团特殊项目
+    if company_id == "meituan":
+        if years_to_graduation == 0:
+            suggestions.append({
+                "project": "北斗计划",
+                "priority": "medium",
+                "reason": "技术顶尖人才计划"
+            })
+    
+    return suggestions
 
 
 # 测试
