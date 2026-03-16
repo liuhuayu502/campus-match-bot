@@ -346,14 +346,16 @@ class JDMatcher:
         
         return 0.3, [f"❌ 地点不符合"]
     
-    def match_extras(self, job: Dict, profile: Dict) -> float:
+    def match_extras(self, job: Dict, profile: Dict) -> tuple:
         """匹配其他加分项"""
         score = 0
+        reasons = []
         
         # 奖项加分
         awards = profile.get('awards', [])
         if len(awards) >= 3:
             score += 0.4
+            reasons.append("✅ 获奖经历丰富")
         elif len(awards) >= 1:
             score += 0.2
         
@@ -361,6 +363,7 @@ class JDMatcher:
         projects = profile.get('projects', [])
         if len(projects) >= 3:
             score += 0.3
+            reasons.append("✅ 项目经验丰富")
         elif len(projects) >= 1:
             score += 0.1
         
@@ -368,6 +371,7 @@ class JDMatcher:
         skills = profile.get('skills', [])
         if len(skills) >= 10:
             score += 0.2
+            reasons.append("✅ 技能多样")
         elif len(skills) >= 5:
             score += 0.1
         
@@ -380,7 +384,7 @@ class JDMatcher:
                     score += 0.1
                     break
         
-        return min(score, 1.0)
+        return min(score, 1.0), reasons
     
     def extract_job_skills(self, job: Dict) -> List[str]:
         """从 JD 中提取技能要求"""

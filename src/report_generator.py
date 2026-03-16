@@ -56,7 +56,7 @@ class ReportGenerator:
 
 ## 💡 申请建议
 
-{ suggestions}
+{suggestions}
 
 ---
 
@@ -90,7 +90,7 @@ class ReportGenerator:
             high_match_jobs=high_match_text,
             mid_match_jobs=mid_match_text,
             suggestions='\n'.join(suggestions),
-            version='1.0.0'
+            version='2.0.0'
         )
         
         # 保存报告
@@ -107,15 +107,17 @@ class ReportGenerator:
         formatted = []
         
         for i, job in enumerate(jobs, 1):
+            # 获取岗位链接
+            job_url = job.get('url') or job.get('apply_url', '')
+            
             job_text = f"""### {i}. {job['company']} - {job['position']}
 
 - **匹配度:** {job['match_score']}/100
 - **地点:** {job.get('location', '未指定')}
 - **薪资:** {job.get('salary', '面议')}
-- **类型:** {job.get('type', '未指定')}
-- **发布时间:** {job.get('publish_date', '未指定')}
-- **截止时间:** {job.get('deadline', '未指定')}
-- **申请链接:** [{job.get('apply_url', '点击申请')}]({job.get('apply_url', '#')})
+- **类型:** {job.get('job_type', job.get('type', '未指定'))}
+- **职位类别:** {job.get('category', '未指定')}
+- **申请链接:** [点击申请]({job_url})
 - **匹配原因:**
 {self.format_reasons(job.get('match_reasons', []))}
 - **申请建议:** {job.get('suggestion', '尽早申请，突出相关经历')}

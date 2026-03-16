@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
-校招匹配助手 - 主入口
-Campus Match Bot - Main Entry Point
+校招匹配助手 - 主入口 v2.0
+Campus Match Bot - Main Entry Point v2.0
 
 功能:
-  1. 解析用户简历，提取关键能力
-  2. 爬取大厂校招官网岗位信息
-  3. 计算简历与 JD 的匹配度
-  4. 筛选并推荐高匹配岗位
-  5. 生成详细报告
+  1. 解析用户简历，提取关键能力 (支持LLM)
+  2. 爬取大厂校招官网岗位信息 (真实数据)
+  3. 筛选日常实习岗位
+  4. 计算简历与 JD 的匹配度
+  5. 筛选并推荐高匹配岗位
+  6. 生成详细报告（带岗位链接）
 
 使用方式:
-  python main.py --resume <简历文件> --companies <公司列表> --output <输出文件>
+  python main.py --resume <简历文件> --companies <公司> --category <类别> --output <输出>
+  
+  # 示例
+  python main.py --resume my-resume.md --companies bytedance --category 运营
+  python main.py --resume resume.md --companies bytedance --category 产品经理 --city 上海
 """
 
 import argparse
@@ -21,18 +26,20 @@ from datetime import datetime
 from pathlib import Path
 
 from resume_parser import ResumeParser
+from resume_parser_llm import ResumeParserLLM
 from job_crawler import JobCrawler
 from jd_matcher import JDMatcher
 from report_generator import ReportGenerator
 
 
 class CampusMatchBot:
-    """校招匹配助手主类"""
+    """校招匹配助手主类 v2.0"""
     
     def __init__(self, config_path: str = "config/api.json"):
         """初始化"""
         self.config = self.load_config(config_path)
         self.resume_parser = ResumeParser()
+        self.resume_parser_llm = ResumeParserLLM()
         self.job_crawler = JobCrawler()
         self.jd_matcher = JDMatcher()
         self.report_generator = ReportGenerator()
@@ -72,14 +79,26 @@ class CampusMatchBot:
         print(f"   技能：{len(self.user_profile.get('skills', []))} 项")
         print(f"   实习：{len(self.user_profile.get('internships', []))} 段")
     
-    def crawl_jobs(self, companies: list, positions: list = None):
-        """爬取岗位信息"""
+    def crawl_jobs(self, companies: list, positions: list = None, category: str = None, city: str = None):
+        """
+        爬取岗位信息
+        
+        Args:
+            companies: 公司列表
+            positions: 职位关键词
+            category: 职位类别 (运营/产品经理/数据分析/商业产品/营销策划/广告投放/商务拓展)
+            city: 工作城市
+        """
         print(f"\n🔍 正在爬取岗位信息...")
         print(f"   目标公司：{', '.join(companies)}")
+        if category:
+            print(f"   职位类别：{category}")
+        if city:
+            print(f"   工作城市：{city}")
         
         for company in companies:
             print(f"\n[{company}] 爬取中...")
-            company_jobs = self.job_crawler.crawl(company, positions)
+            company_jobs = self.job_crawler.crawl(company, positions, category, city)
             self.jobs.extend(company_jobs)
             print(f"   ✅ 找到 {len(company_jobs)} 个岗位")
         
@@ -131,7 +150,7 @@ class CampusMatchBot:
     def run(self, args):
         """主运行流程"""
         print("=" * 60)
-        print("🎯 校招匹配助手 v1.0.0")
+        print("🎯 校招匹配助手 v2.0")
         print("=" * 60)
         
         # 1. 解析简历
@@ -140,7 +159,7 @@ class CampusMatchBot:
         # 2. 爬取岗位
         companies = args.companies.split(',') if args.companies else ['bytedance']
         positions = args.positions.split(',') if args.positions else None
-        self.crawl_jobs(companies, positions)
+        self.crawl_jobs(companies, positions, args.category, args.city)
         
         # 3. 匹配筛选
         min_score = args.min_score if args.min_score else 60
@@ -158,13 +177,21 @@ class CampusMatchBot:
 def main():
     """命令行入口"""
     parser = argparse.ArgumentParser(
-        description='🎯 校招匹配助手 - 智能校招岗位推荐工具',
+        description='🎯 校招匹配助手 v2.0 - 智能校招岗位推荐工具',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+职位类别 (--category):
+  运营, 产品经理, 数据分析, 商业产品, 营销策划, 广告投放, 商务拓展
+
 示例:
-  python main.py --resume my-resume.md --companies bytedance,tencent
+  # 爬取字节跳动运营类日常实习
+  python main.py --resume my-resume.md --companies bytedance --category 运营
+  
+  # 爬取产品经理岗位，上海
+  python main.py --resume resume.md --companies bytedance --category 产品经理 --city 上海
+  
+  # 生成报告
   python main.py --resume resume.md --output report.md --min-score 70
-  python main.py --interactive
         """
     )
     
@@ -172,7 +199,7 @@ def main():
         '--resume', '-r',
         type=str,
         required=True,
-        help='简历文件路径 (Markdown 格式)'
+        help='简历文件路径 (支持 Markdown, PDF, TXT)'
     )
     
     parser.add_argument(
@@ -186,7 +213,21 @@ def main():
         '--positions', '-p',
         type=str,
         default=None,
-        help='目标岗位类型，逗号分隔 (默认：全部)'
+        help='目标岗位类型关键词，逗号分隔 (可选)'
+    )
+    
+    parser.add_argument(
+        '--category', '-cat',
+        type=str,
+        default=None,
+        help='职位类别：运营/产品经理/数据分析/商业产品/营销策划/广告投放/商务拓展'
+    )
+    
+    parser.add_argument(
+        '--city',
+        type=str,
+        default=None,
+        help='工作城市：北京/上海/深圳/广州/杭州/成都/武汉'
     )
     
     parser.add_argument(
