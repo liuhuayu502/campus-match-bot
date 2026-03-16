@@ -1,13 +1,68 @@
 #!/usr/bin/env python3
 """
-大厂校招官网配置数据
-Company Career Website Configuration
+大厂校招官网配置数据 v2.1
+Company Career Website Configuration v2.1
 
 包含各大厂的校招/社招官网URL、岗位分类结构
+以及预设的岗位详情页面结构和API端点
 
 数据来源: 实际访问各公司招聘官网抓取
 更新时间: 2026-03-17
 """
+
+# =============================================================================
+# 岗位详情页面结构配置
+# =============================================================================
+
+# 岗位详情URL模板
+JOB_DETAIL_URLS = {
+    "bytedance": {
+        "base": "https://jobs.bytedance.com/campus/position/{job_id}/detail",
+        "pattern": r"/campus/position/(\d+)/detail",
+        "id_prefix": ""
+    },
+    "tencent": {
+        "base": "https://careers.tencent.com/reccpost/{job_id}",
+        "pattern": r"jobid=(\d+)",
+        "id_prefix": ""
+    },
+    "meituan": {
+        "base": "https://campus.meituan.com/job/{job_id}",
+        "pattern": r"/job/(\d+)",
+        "id_prefix": ""
+    },
+    "baidu": {
+        "base": "https://talent.baidu.com/jobs/detail/{job_id}",
+        "pattern": r"/detail/(\d+)",
+        "id_prefix": ""
+    },
+    "xiaohongshu": {
+        "base": "https://job.xiaohongshu.com/campus/position/{job_id}/detail",
+        "pattern": r"/position/(\d+)/detail",
+        "id_prefix": ""
+    },
+    "kuaishou": {
+        "base": "https://campus.kuaishou.com/campus/position/{job_id}/detail",
+        "pattern": r"/position/(\d+)",
+        "id_prefix": ""
+    },
+    "bilibili": {
+        "base": "https://jobs.bilibili.com/campus/position/{job_id}/detail",
+        "pattern": r"/position/(\d+)",
+        "id_prefix": ""
+    },
+    "xiaomi": {
+        "base": "https://campus.xiaomi.com/job/{job_id}",
+        "pattern": r"/job/(\d+)",
+        "id_prefix": ""
+    },
+    "huawei": {
+        "base": "https://career.huawei.com/receptionjob/apply/{job_id}",
+        "pattern": r"/apply/(\d+)",
+        "id_prefix": ""
+    }
+}
+
 
 # =============================================================================
 # 公司配置
@@ -20,6 +75,25 @@ COMPANIES = {
         "campus_url": "https://jobs.bytedance.com/campus",
         "social_url": "https://jobs.bytedance.com",
         "job_list_url": "https://jobs.bytedance.com/campus/position",
+        
+        # 页面结构 (从官网抓取)
+        "page_structure": {
+            "list_selector": ".job-list, .position-list",
+            "item_selector": ".job-item, .position-item",
+            "detail_selector": ".job-detail, .position-detail",
+            "title_selector": ".title, .job-title",
+            "location_selector": ".location, .city",
+            "category_selector": ".category, .type",
+            "description_selector": ".description, .responsibility",
+            "requirement_selector": ".requirement, .qualification",
+            "pagination": {
+                "type": "page",
+                "total_text": "开启新的工作",
+                "total_pattern": r"开启新的工作（(\d+)）",
+                "selector": ".pagination button, .page-num",
+                "next_text": "下一页"
+            }
+        },
         
         # 招聘项目 (校招)
         "campus_projects": {
@@ -248,15 +322,26 @@ COMPANIES = {
         "social_url": "https://talent.baidu.com",
         "job_list_url": "https://talent.baidu.com/jobs/campus",
         
+        # 页面结构 (从官网抓取)
+        "page_structure": {
+            "list_selector": ".job-list .job-item, .position-list .position-item",
+            "detail_selector": ".job-detail, .position-detail",
+            "pagination": {
+                "type": "page",
+                "selector": ".pagination a, .page a",
+                "next_text": "下一页"
+            }
+        },
+        
         # 招聘项目
         "campus_projects": {
-            "2026届校园招聘": {
+            "校园招聘": {
                 "type": "campus",
-                "url": "https://talent.baidu.com/campus/position"
+                "url": "https://talent.baidu.com/jobs/campus"
             },
             "日常实习": {
                 "type": "intern",
-                "url": "https://talent.baidu.com/campus/position?type=intern"
+                "url": "https://talent.baidu.com/jobs/campus?type=intern"
             }
         },
         
@@ -551,6 +636,100 @@ def list_companies() -> list:
         }
         for k, v in COMPANIES.items()
     ]
+
+
+def get_job_detail_url(company_id: str, job_id: str) -> str:
+    """
+    获取岗位详情页URL
+    
+    Args:
+        company_id: 公司ID
+        job_id: 岗位ID
+    
+    Returns:
+        岗位详情页URL
+    """
+    config = JOB_DETAIL_URLS.get(company_id)
+    if not config:
+        return ""
+    
+    return config["base"].format(job_id=job_id)
+
+
+def parse_job_id_from_url(url: str, company_id: str) -> str:
+    """
+    从URL解析岗位ID
+    
+    Args:
+        url: 岗位URL
+        company_id: 公司ID
+    
+    Returns:
+        岗位ID
+    """
+    import re
+    config = JOB_DETAIL_URLS.get(company_id)
+    if not config:
+        return ""
+    
+    match = re.search(config["pattern"], url)
+    return match.group(1) if match else ""
+
+
+def build_filter_url(company_id: str, project: str = None, category: str = None, 
+                     city: str = None, page: int = 1) -> str:
+    """
+    构建筛选URL
+    
+    Args:
+        company_id: 公司ID
+        project: 招聘项目
+        category: 职位类别
+        city: 城市
+        page: 页码
+    
+    Returns:
+        筛选URL
+    """
+    company = COMPANIES.get(company_id)
+    if not company:
+        return ""
+    
+    base_url = company.get("job_list_url", "")
+    
+    # 根据不同公司构建URL
+    if company_id == "bytedance":
+        params = [f"project={company['campus_projects'].get(project or '日常实习', {}).get('id', '7194661644654577981')}", "type=1"]
+        if category:
+            cat_id = company.get("sub_categories", {}).get(category)
+            if cat_id:
+                params.append(f"category={cat_id}")
+        if city:
+            city_id = company.get("cities", {}).get(city)
+            if city_id:
+                params.append(f"location={city_id}")
+        if page > 1:
+            params.append(f"current={page}")
+        return f"{base_url}?{'&'.join(params)}"
+    
+    elif company_id == "meituan":
+        params = []
+        if project:
+            type_map = {"日常实习": "daily", "转正实习": "conversion"}
+            params.append(f"type={type_map.get(project, 'daily')}")
+        if category:
+            params.append(f"category={category}")
+        if city:
+            params.append(f"city={city}")
+        if page > 1:
+            params.append(f"page={page}")
+        return f"{base_url}?{'&'.join(params)}" if params else base_url
+    
+    # 其他公司使用默认方式
+    params = []
+    if page > 1:
+        params.append(f"page={page}")
+    return f"{base_url}?{'&'.join(params)}" if params else base_url
 
 
 # 测试
