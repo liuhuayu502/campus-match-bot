@@ -150,7 +150,8 @@ class CampusMatchBot:
     def run(self, args):
         """主运行流程"""
         print("=" * 60)
-        print("🎯 校招匹配助手 v2.0")
+        print("🎯 校招匹配助手 v2.1")
+        print("   简历解析 → 能力画像 → 官网抓取 → 智能匹配 → 推荐报告")
         print("=" * 60)
         
         # 1. 解析简历
