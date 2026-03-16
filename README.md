@@ -1,22 +1,31 @@
-# 🎯 校招匹配助手 (Campus Match Bot)
+# 🎯 校招匹配助手 (Campus Match Bot) v2.2
 
 智能校招岗位推荐工具，从官网获取真实岗位数据，匹配你的简历。
-
-[English](./README_EN.md)
 
 ## ✨ 核心功能
 
 1. **📄 简历解析** - 支持 Markdown/PDF/TXT，使用 LLM 提取能力画像
-2. **🔍 官网抓取** - 从校招官网获取真实岗位信息
-3. **🎯 智能匹配** - 根据用户画像与岗位 JD 计算匹配度
-4. **📋 详细报告** - 输出推荐岗位，包含 JD 和申请链接
+2. **🔍 官网抓取** - 使用 Browser 从校招官网获取**实时**岗位信息
+3. **🎯 智能匹配** - 根据用户画像（技能/语言/经历）与岗位 JD 计算匹配度
+4. **📋 详细报告** - 输出推荐岗位，包含 JD、链接、匹配理由
 
-## 📦 安装
+## 📋 完整工作流程
 
-```bash
-git clone https://github.com/liuhuayu502/campus-match-bot.git
-cd campus-match-bot
-pip install -r requirements.txt
+```
+用户上传简历
+     ↓
+🤖 LLM解析 → 能力画像
+     ↓     (教育背景/技能/语言/实习/项目)
+     ↓
+🔍 Browser抓取 → 实时岗位
+     ↓     (从校招官网抓取)
+     ↓
+🎯 匹配计算 → 匹配分数
+     ↓     (技能/经历/语言匹配)
+     ↓
+📋 输出推荐报告
+     ↓
+  包含: 岗位名称/JD/链接/匹配分/风险提示
 ```
 
 ## 🚀 使用方法
@@ -25,10 +34,10 @@ pip install -r requirements.txt
 # 基本用法
 python src/main.py --resume my-resume.md --companies bytedance --category 运营
 
-# 指定城市和最低匹配分
-python src/main.py -r resume.md -c bytedance --category 产品经理 --city 上海 --min-score 70
+# 指定城市
+python src/main.py -r resume.md --category 产品经理 --city 上海
 
-# 多公司同时匹配
+# 多公司
 python src/main.py --resume resume.md --companies bytedance,meituan --category 运营
 ```
 
@@ -37,42 +46,26 @@ python src/main.py --resume resume.md --companies bytedance,meituan --category �
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `--resume, -r` | 简历文件路径 | `my-resume.md` |
-| `--companies, -c` | 目标公司 | `bytedance`, `meituan` |
-| `--category, -cat` | 职位类别 | `运营`, `产品经理`, `数据分析` |
-| `--city` | 工作城市 | `上海`, `北京` |
-| `--min-score, -m` | 最低匹配分 | `60` |
-| `--output, -o` | 输出报告路径 | `report.md` |
+| `--companies, -c` | 目标公司 | `bytedance` |
+| `--category, -cat` | 职位类别 | `运营`、`产品经理` |
+| `--city` | 工作城市 | `上海` |
+| `--min-score` | 最低匹配分 | `60` |
 
 ### 职位类别
 
-| 类别 | 说明 |
-|------|------|
-| `运营` | 内容运营、用户运营、活动运营 |
-| `产品经理` | 产品经理、产品运营 |
-| `数据分析` | 数据分析、商业分析 |
-| `商业产品` | 商业产品（广告） |
-| `营销策划` | 市场营销、品牌策划 |
-| `广告投放` | 广告投放、增长投放 |
-| `商务拓展` | BD、商务合作 |
+- `运营` - 内容运营、用户运营、活动运营
+- `产品经理` - 产品经理、产品运营
+- `数据分析` - 数据分析、商业分析
+- `商业产品` - 商业产品（广告）
+- `营销策划` - 市场营销
+- `广告投放` - 广告投放
+- `商务拓展` - BD
 
-## 📋 完整工作流程
+## ⚠️ 重要说明
 
-```
-用户上传简历
-     ↓
-LLM 解析 → 能力画像
-     ↓     (教育背景/技能/实习/项目)
-     ↓
-校招官网抓取岗位
-     ↓     (字节跳动/腾讯/美团/百度)
-     ↓
-匹配计算 → 匹配分数
-     ↓     (技能匹配/经历匹配/学历匹配)
-     ↓
-输出推荐报告
-     ↓
-包含: 岗位名称/JD/链接/匹配分
-```
+1. **必须使用 Browser 抓取** - 每次运行都会从校招官网实时抓取岗位，确保数据最新
+2. **语言过滤** - 会自动检测岗位是否要求小语种（如日语、韩语），并标记风险
+3. **匹配逻辑** - 综合考虑技能匹配、经历匹配、语言要求
 
 ## 📝 简历格式
 
@@ -81,54 +74,43 @@ LLM 解析 → 能力画像
 ```markdown
 # 姓名
 
+## 基本信息
+- 电话: xxx
+- 邮箱: xxx
+- 可到岗时间: 随时
+- 可实习时长: 3个月+
+
 ## 教育背景
-- XX大学 XX专业 本科 2022-2026
-- GPA: 3.5/4.0
+- 学校 - 专业 - 学历
 
 ## 技能
-- 工具: Python, SQL, Excel
-- 语言: 英语CET-6
+- 工具: Python, SQL
+- 语言: 英语, 粤语
 
 ## 实习经历
 ### 公司名称
-- 负责内容...
+- 岗位: xxx
+- 时间: xxx
+- 内容: xxx
 ```
 
 ## 🏢 支持公司
 
 | 公司 | 状态 | 官网 |
 |------|------|------|
-| 字节跳动 | ✅ 真实数据 | jobs.bytedance.com |
+| 字节跳动 | ✅ 实时抓取 | jobs.bytedance.com |
 | 腾讯 | 🔜 开发中 | join.qq.com |
 | 美团 | 🔜 开发中 | campus.meituan.com |
 | 百度 | 🔜 开发中 | talent.baidu.com |
 
-## 📄 报告示例
+## 📄 输出报告示例
 
-生成的报告包含：
+报告包含：
+- 候选人画像
+- 推荐岗位列表（含JD和链接）
+- 匹配度评分
+- 风险提示（如语言要求不符）
+- 申请建议
 
-```markdown
-# 校招岗位推荐报告
-
-## 候选人画像
-- 姓名：XXX
-- 学历：XX大学 XX专业
-- 技能：运营、数据分析、SQL
-- 实习：X段
-
-## 推荐岗位
-
-### 1. 字节跳动 - UGC策略运营实习生
-- 匹配度：85/100
-- 地点：上海
-- 链接：[申请链接](https://...)
-- JD：负责UGC运营业务...
-```
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 PR！
-
-## 📄 License
-
-MIT License
+---
+*GitHub: https://github.com/liuhuayu502/campus-match-bot*
